@@ -1,42 +1,42 @@
 # Domain Services — NexusMarket
 
-## Introducción
+## Introduction
 
-Un Domain Service encapsula lógica de negocio que **no pertenece naturalmente a una sola entidad**, porque coordina varias entidades/agregados, valida reglas transversales (RG-01, RG-02, RG-03) o depende de un output port para completarse. Cuando una operación puede resolverse enteramente dentro de una entidad (por ejemplo `Producto.suspender()`), se deja como método de la entidad y no se duplica aquí como servicio.
+A Domain Service encapsulates business logic that **does not naturally belong to a single entity**, because it coordinates several entities/aggregates, validates cross-cutting rules (BR-01, BR-02, BR-03), or depends on an output port to complete. When an operation can be resolved entirely within an entity (for example `Product.suspend()`), it is left as an entity method and is not duplicated here as a service.
 
-Este documento es el índice general; el detalle de cada servicio (responsabilidad, operaciones, reglas de negocio, puertos que consume) vive en su propio archivo dentro de `domain/services/`.
+This document is the general index; the detail of each service (responsibility, operations, business rules, ports it consumes) lives in its own file inside `domain/services/`.
 
 ---
 
-## Mapa de Domain Services
+## Domain Services Map
 
-| Servicio | Archivo | Dominio funcional (spec) | Entidades que orquesta |
+| Service | File | Functional domain (spec) | Entities it orchestrates |
 |---|---|---|---|
-| Autenticación y gestión de usuarios | [`user-authentication-services.md`](services/user-authentication-services.md) | DOMINIO 1 — Administración de Usuarios | `Usuario` y sus subclases |
-| Gestión de compradores | [`buyer-services.md`](services/buyer-services.md) | DOMINIO 2 — Gestión de Compradores | `Comprador`, `Pedido`, `SolicitudDevolucion` |
-| Gestión de vendedores | [`seller-services.md`](services/seller-services.md) | DOMINIO 3 — Gestión de Vendedores | `Vendedor`, `Administrador`, `Producto`, `Bodega` |
-| Gestión de bodegas | [`warehouse-services.md`](services/warehouse-services.md) | DOMINIO 4 — Gestión de Bodegas | `Bodega`, `ItemInventario` |
-| Gestión de catálogo | [`catalog-services.md`](services/catalog-services.md) | DOMINIO 5 — Gestión del Catálogo | `Producto`, `Vendedor` |
-| Gestión de inventario | [`inventory-services.md`](services/inventory-services.md) | DOMINIO 6 — Gestión del Inventario | `ItemInventario`, `MovimientoInventario` |
-| Gestión de pedidos | [`order-services.md`](services/order-services.md) | DOMINIO 7 — Gestión de Pedidos | `Pedido`, `ItemPedido`, `Comprador`, `Producto` |
-| Facturación | [`billing-services.md`](services/billing-services.md) | OBJ-09 — Administrar la facturación | `Factura`, `Pedido` |
-| Logística y envíos | [`shipping-services.md`](services/shipping-services.md) | OBJ-10 — Gestionar procesos logísticos | `Envio`, `Bodega`, `OperadorLogistico`, `Pedido` |
-| Devoluciones y reembolsos | [`return-services.md`](services/return-services.md) | OBJ-11 — Administrar devoluciones y reembolsos | `SolicitudDevolucion`, `Administrador`, `MovimientoInventario` |
-| Reportes administrativos | [`reporting-services.md`](services/reporting-services.md) | OBJ-12 — Consolidar información administrativa | `Supervisor` (consulta transversal, solo lectura) |
+| Authentication and user management | [`user-authentication-services.md`](services/user-authentication-services.md) | DOMAIN 1 — User Administration | `User` and its subclasses |
+| Buyer management | [`buyer-services.md`](services/buyer-services.md) | DOMAIN 2 — Buyer Management | `Buyer`, `Order`, `ReturnRequest` |
+| Seller management | [`seller-services.md`](services/seller-services.md) | DOMAIN 3 — Seller Management | `Seller`, `Administrator`, `Product`, `Warehouse` |
+| Warehouse management | [`warehouse-services.md`](services/warehouse-services.md) | DOMAIN 4 — Warehouse Management | `Warehouse`, `InventoryItem` |
+| Catalog management | [`catalog-services.md`](services/catalog-services.md) | DOMAIN 5 — Catalog Management | `Product`, `Seller` |
+| Inventory management | [`inventory-services.md`](services/inventory-services.md) | DOMAIN 6 — Inventory Management | `InventoryItem`, `InventoryMovement` |
+| Order management | [`order-services.md`](services/order-services.md) | DOMAIN 7 — Order Management | `Order`, `OrderItem`, `Buyer`, `Product` |
+| Billing | [`billing-services.md`](services/billing-services.md) | OBJ-09 — Manage billing | `Invoice`, `Order` |
+| Logistics and shipping | [`shipping-services.md`](services/shipping-services.md) | OBJ-10 — Manage logistics processes | `Shipment`, `Warehouse`, `LogisticsOperator`, `Order` |
+| Returns and refunds | [`return-services.md`](services/return-services.md) | OBJ-11 — Manage returns and refunds | `ReturnRequest`, `Administrator`, `InventoryMovement` |
+| Administrative reporting | [`reporting-services.md`](services/reporting-services.md) | OBJ-12 — Consolidate administrative information | `Supervisor` (cross-cutting query, read-only) |
 
 ---
 
-## Reglas transversales aplicadas por todos los servicios
+## Cross-cutting rules applied by all services
 
-- **RG-01:** toda operación de escritura debe recibir el `Usuario` autenticado que la ejecuta; los servicios la propagan hacia los output ports de auditoría (`MovimientoInventario.ejecutadoPor`).
-- **RG-02:** ningún servicio permite asignar más de un rol a un mismo `Usuario`; el rol queda fijado por el tipo de la subclase, no por un campo mutable.
-- **RG-03:** cada servicio valida `usuario.validarAcceso(recurso)` / `usuario.obtenerPermisos()` antes de ejecutar la operación solicitada, para que ningún participante administre información fuera de su rol.
+- **BR-01:** every write operation must receive the authenticated `User` executing it; services propagate it to the audit output ports (`InventoryMovement.executedBy`).
+- **BR-02:** no service allows more than one role to be assigned to the same `User`; the role is fixed by the subclass type, not by a mutable field.
+- **BR-03:** each service validates `user.validateAccess(resource)` / `user.getPermissions()` before executing the requested operation, so that no participant manages information outside their role.
 
-## Convención de cada archivo de servicio
+## Convention for each service file
 
-Todos los archivos en `domain/services/` siguen la misma estructura para facilitar su lectura:
+All files in `domain/services/` follow the same structure to make them easier to read:
 
-1. **Responsabilidad** — qué resuelve el servicio y por qué no vive en una sola entidad.
-2. **Operaciones** — firma, entrada/salida y precondición de cada operación expuesta.
-3. **Reglas de negocio aplicadas** — referencia directa a los códigos RG-xx / OBJ-xx / DOMINIO de la especificación funcional.
-4. **Dependencias (Output Ports)** — qué puertos de `Output-ports.md` consume.
+1. **Responsibility** — what the service solves and why it does not live in a single entity.
+2. **Operations** — signature, input/output, and precondition of each exposed operation.
+3. **Applied business rules** — direct reference to the BR-xx / OBJ-xx / DOMAIN codes from the functional specification.
+4. **Dependencies (Output Ports)** — which ports from `Output-ports.md` it consumes.

@@ -1,43 +1,43 @@
 # Domain Value Objects — NexusMarket
 
-## Introducción
+## Introduction
 
-Un Value Object (VO) es un tipo del dominio que se define exclusivamente por sus atributos, no tiene identidad propia y es inmutable: dos instancias con los mismos valores son intercambiables. En NexusMarket los Value Objects capturan **estados controlados** (enumeraciones cerradas descritas en la especificación funcional) y **datos compuestos** que viajan siempre acompañando a una entidad, sin ciclo de vida ni repositorio propio.
+A Value Object (VO) is a domain type defined exclusively by its attributes, has no identity of its own, and is immutable: two instances with the same values are interchangeable. In NexusMarket, Value Objects capture **controlled states** (closed enumerations described in the functional specification) and **composite data** that always travels attached to an entity, without a lifecycle or its own repository.
 
-Se documentan por separado del Domain Model porque, a diferencia de las entidades (`Usuario`, `Pedido`, `Producto`, etc.), no tienen `id` ni se persisten de forma independiente.
+They are documented separately from the Domain Model because, unlike entities (`User`, `Order`, `Product`, etc.), they have no `id` and are not persisted independently.
 
 ---
 
-## Enumeraciones (Value Objects de estado)
+## Enumerations (state Value Objects)
 
-| Value Object | Valores permitidos | Entidad que lo usa | Regla que protege |
+| Value Object | Allowed values | Entity that uses it | Rule it protects |
 |---|---|---|---|
-| `EstadoUsuario` | Activo, Bloqueado | `Usuario` | Un usuario bloqueado no puede operar (`estaActivo()`). |
-| `EstadoComprador` | Habilitado, Restringido | `Comprador` | Determina si `puedeComprar()`. |
-| `TipoBodega` | Marketplace, Vendedor | `Bodega` | Define si `propietario` puede ser nulo. |
-| `TipoProducto` | Físico, Digital | `Producto` | Determina si el producto requiere `Envio` (`esFisico()`). |
-| `EstadoProducto` | Publicado, Suspendido, Descontinuado | `Producto` | El catálogo público solo muestra productos `Publicado`. Descontinuado es irreversible. |
-| `TipoMovimiento` | Ingreso, Reserva, Salida por venta, Ajuste, Devolución | `MovimientoInventario` | Define el efecto que `aplicar()` produce sobre la cantidad del ítem. |
-| `EstadoPedido` | Carrito, Pendiente de Pago, Pagado, Despachado, Entregado/Finalizado | `Pedido` | Gobierna las transiciones válidas del ciclo de vida del pedido (DOMINIO 7). |
-| `EstadoEnvio` | Preparando, En Tránsito, Entregado, Incidencia | `Envio` | `marcarEntregado()` solo es válido desde `En Tránsito`. |
-| `EstadoDevolucion` | Solicitada, Aprobada, Rechazada, Reembolsada | `SolicitudDevolucion` | `procesarReembolso()` exige `estadoSolicitud == Aprobada`. |
+| `UserStatus` | Active, Blocked | `User` | A blocked user cannot operate (`isActive()`). |
+| `BuyerStatus` | Enabled, Restricted | `Buyer` | Determines whether `canPurchase()`. |
+| `WarehouseType` | Marketplace, Seller | `Warehouse` | Defines whether `owner` can be null. |
+| `ProductType` | Physical, Digital | `Product` | Determines whether the product requires `Shipment` (`isPhysical()`). |
+| `ProductStatus` | Published, Suspended, Discontinued | `Product` | The public catalog only shows `Published` products. Discontinued is irreversible. |
+| `MovementType` | Inbound, Reservation, Sale Outbound, Adjustment, Return | `InventoryMovement` | Defines the effect that `apply()` produces on the item's quantity. |
+| `OrderStatus` | Cart, Pending Payment, Paid, Shipped, Delivered/Completed | `Order` | Governs the valid transitions of the order lifecycle (DOMAIN 7). |
+| `ShipmentStatus` | Preparing, In Transit, Delivered, Issue | `Shipment` | `markDelivered()` is only valid from `In Transit`. |
+| `ReturnStatus` | Requested, Approved, Rejected, Refunded | `ReturnRequest` | `processRefund()` requires `requestStatus == Approved`. |
 
 ---
 
-## Value Objects compuestos
+## Composite Value Objects
 
-| Value Object | Composición | Descripción | Usado por |
+| Value Object | Composition | Description | Used by |
 |---|---|---|---|
-| `Direccion` | `linea`, `ciudad`, `referencia` (agrupados desde `direccionPrincipal` / `direccionesAdicionales`) | Ubicación de entrega. Se trata como valor: si cambia una dirección, se reemplaza el VO completo, no se edita un campo suelto. | `Comprador` |
-| `Dinero` | `monto: BigDecimal`, `moneda` (implícita: única moneda de la plataforma) | Envuelve todo monto monetario (`precioUnitario`, `montoTotal`, `montoReembolso`) para evitar aritmética directa sobre `BigDecimal` sin control de escala/redondeo. | `ItemPedido`, `Factura`, `SolicitudDevolucion` |
-| `PeriodoAuditoria` *(soporte a RG-01)* | `fechaMovimiento` + `ejecutadoPor` | Par inmutable que se adjunta a cada `MovimientoInventario` para garantizar trazabilidad; no se puede modificar una vez creado el movimiento. | `MovimientoInventario` |
+| `Address` | `line`, `city`, `reference` (grouped from `primaryAddress` / `additionalAddresses`) | Delivery location. Treated as a value: if an address changes, the entire VO is replaced, not a loose field edited. | `Buyer` |
+| `Money` | `amount: BigDecimal`, `currency` (implicit: the platform's single currency) | Wraps every monetary amount (`unitPrice`, `totalAmount`, `refundAmount`) to avoid direct arithmetic on `BigDecimal` without scale/rounding control. | `OrderItem`, `Invoice`, `ReturnRequest` |
+| `AuditPeriod` *(supports BR-01)* | `movementDate` + `executedBy` | Immutable pair attached to each `InventoryMovement` to guarantee traceability; cannot be modified once the movement is created. | `InventoryMovement` |
 
-> Nota: `Direccion` y `Dinero` no aparecen como clases separadas en el Domain Model v2 (los atributos están planos en `Comprador`, `ItemPedido`, `Factura` y `SolicitudDevolucion`). Se documentan aquí como candidatos a Value Object explícito para la capa de dominio, dado que ambos son datos sin identidad que siempre acompañan a una entidad. Si el equipo decide no extraerlos como clases propias, esta sección sirve como referencia de las invariantes que de todas formas deben cumplir esos atributos.
+> Note: `Address` and `Money` do not appear as separate classes in Domain Model v2 (the attributes are flat in `Buyer`, `OrderItem`, `Invoice`, and `ReturnRequest`). They are documented here as candidates for an explicit Value Object in the domain layer, given that both are identity-less data that always accompany an entity. If the team decides not to extract them as their own classes, this section serves as a reference for the invariants those attributes must satisfy regardless.
 
 ---
 
-## Invariantes de los Value Objects
+## Value Object invariants
 
-- Todo Value Object es **inmutable**: una actualización crea una nueva instancia, nunca se muta el objeto original.
-- Ninguna enumeración admite valores fuera del catálogo definido; validarlo es responsabilidad de la capa de dominio antes de asignar el estado.
-- `Dinero` nunca admite montos negativos salvo en el caso explícito de `montoReembolso`, donde el signo lo determina el flujo de negocio, no el VO.
+- Every Value Object is **immutable**: an update creates a new instance, the original object is never mutated.
+- No enumeration accepts values outside the defined catalog; validating this is the responsibility of the domain layer before assigning the state.
+- `Money` never accepts negative amounts except in the explicit case of `refundAmount`, where the sign is determined by the business flow, not by the VO.

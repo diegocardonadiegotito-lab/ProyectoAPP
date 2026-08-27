@@ -1,467 +1,467 @@
 # Domain Model — NexusMarket
 
-## Introducción
+## Introduction
 
-El Domain Model representa las entidades de negocio centrales de la plataforma marketplace NexusMarket. Estas entidades encapsulan las reglas de negocio, los datos, el comportamiento y las relaciones descritas en la especificación funcional.
+The Domain Model represents the core business entities of the NexusMarket marketplace platform. These entities encapsulate the business rules, data, behavior, and relationships described in the functional specification.
 
-El modelo sigue los principios del Diseño Orientado a Objetos y aplica **herencia** para eliminar información duplicada y **polimorfismo** para que cada rol de usuario resuelva sus permisos y comportamiento de forma distinta.
+The model follows Object-Oriented Design principles and applies **inheritance** to eliminate duplicated information, and **polymorphism** so that each user role resolves its permissions and behavior differently.
 
-### Cambios respecto a v1
+### Changes from v1
 
-- Se añaden **métodos** a todas las clases (v1 solo tenía atributos — no era posible confirmar polimorfismo sin comportamiento).
-- Se corrige `Pedido.items` de `1..*` a `0..*` (un carrito recién creado tiene 0 items).
-- Se añade `MovimientoInventario.ejecutadoPor: Usuario` para trazabilidad (RG-01).
-- Se añade `SolicitudDevolucion.aprobadoPor: Administrador` (0..1) — la matriz de responsabilidades asigna reembolsos a Comprador *y* Administrador.
-- Se documenta explícitamente por qué `Usuario` no tiene un atributo `rol` (la especificación lo lista, pero se sustituye por el tipo de la subclase).
-- Se agrega la sección **Enumeraciones**, antes solo referenciadas como tipos sin definir.
+- **Methods** were added to all classes (v1 only had attributes — it was not possible to confirm polymorphism without behavior).
+- `Order.items` was corrected from `1..*` to `0..*` (a newly created cart has 0 items).
+- `InventoryMovement.executedBy: User` was added for traceability (BR-01).
+- `ReturnRequest.approvedBy: Administrator` (0..1) was added — the responsibility matrix assigns refunds to both Buyer and Administrator.
+- Explicitly documents why `User` does not have a `role` attribute (the specification lists it, but it is replaced by the subclass type).
+- The **Enumerations** section was added; these were previously referenced only as undefined types.
 
 ---
 
-# Jerarquía de Clases del Dominio
+# Domain Class Hierarchy
 
 ```text
-Usuario (Abstracto)
-├── Comprador
-├── Vendedor
-├── OperadorLogistico
-├── Administrador
+User (Abstract)
+├── Buyer
+├── Seller
+├── LogisticsOperator
+├── Administrator
 └── Supervisor
 
-Bodega
+Warehouse
 
-Producto
+Product
 
-ItemInventario
+InventoryItem
 
-MovimientoInventario
+InventoryMovement
 
-Pedido
-├── ItemPedido
+Order
+├── OrderItem
 
-Factura
+Invoice
 
-Envio
+Shipment
 
-SolicitudDevolucion
+ReturnRequest
 ```
 
 ---
 
-# Relaciones
+# Relationships
 
-| Origen | Relación | Destino | Multiplicidad | Tipo |
+| Source | Relationship | Target | Multiplicity | Type |
 |---|---|---|---|---|
-| Comprador | hereda de | Usuario | — | Herencia |
-| Vendedor | hereda de | Usuario | — | Herencia |
-| OperadorLogistico | hereda de | Usuario | — | Herencia |
-| Administrador | hereda de | Usuario | — | Herencia |
-| Supervisor | hereda de | Usuario | — | Herencia |
-| Vendedor | registradoPor | Administrador | 1 vendedor → 1 administrador | Asociación |
-| Bodega | propietario | Vendedor | 1 bodega → 0..1 vendedor | Asociación |
-| Producto | vendedor | Vendedor | 1 producto → 1 vendedor | Asociación |
-| ItemInventario | producto | Producto | 1 item → 1 producto | Asociación |
-| ItemInventario | bodega | Bodega | 1 item → 1 bodega | Asociación |
-| MovimientoInventario | itemInventario | ItemInventario | 1 movimiento → 1 item | Asociación |
-| MovimientoInventario | ejecutadoPor | Usuario | 1 movimiento → 1 usuario | Asociación *(nuevo — trazabilidad RG-01)* |
-| Pedido | comprador | Comprador | 1 pedido → 1 comprador | Asociación |
-| Pedido | items | ItemPedido | 1 pedido → 0..\* items | Composición *(corregido: antes 1..\*)* |
-| ItemPedido | producto | Producto | 1 item → 1 producto | Asociación |
-| Factura | pedido | Pedido | 1 factura → 1 pedido | Asociación |
-| Envio | pedido | Pedido | 1 envío → 1 pedido | Asociación |
-| Envio | bodegaOrigen | Bodega | 1 envío → 1 bodega | Asociación |
-| Envio | operadorLogistico | OperadorLogistico | 1 envío → 1 operador | Asociación |
-| SolicitudDevolucion | pedido | Pedido | 1 solicitud → 1 pedido | Asociación |
-| SolicitudDevolucion | comprador | Comprador | 1 solicitud → 1 comprador | Asociación |
-| SolicitudDevolucion | aprobadoPor | Administrador | 1 solicitud → 0..1 administrador | Asociación *(nuevo — matriz de responsabilidades)* |
+| Buyer | inherits from | User | — | Inheritance |
+| Seller | inherits from | User | — | Inheritance |
+| LogisticsOperator | inherits from | User | — | Inheritance |
+| Administrator | inherits from | User | — | Inheritance |
+| Supervisor | inherits from | User | — | Inheritance |
+| Seller | registeredBy | Administrator | 1 seller → 1 administrator | Association |
+| Warehouse | owner | Seller | 1 warehouse → 0..1 seller | Association |
+| Product | seller | Seller | 1 product → 1 seller | Association |
+| InventoryItem | product | Product | 1 item → 1 product | Association |
+| InventoryItem | warehouse | Warehouse | 1 item → 1 warehouse | Association |
+| InventoryMovement | inventoryItem | InventoryItem | 1 movement → 1 item | Association |
+| InventoryMovement | executedBy | User | 1 movement → 1 user | Association *(new — BR-01 traceability)* |
+| Order | buyer | Buyer | 1 order → 1 buyer | Association |
+| Order | items | OrderItem | 1 order → 0..\* items | Composition *(corrected: previously 1..\*)* |
+| OrderItem | product | Product | 1 item → 1 product | Association |
+| Invoice | order | Order | 1 invoice → 1 order | Association |
+| Shipment | order | Order | 1 shipment → 1 order | Association |
+| Shipment | originWarehouse | Warehouse | 1 shipment → 1 warehouse | Association |
+| Shipment | logisticsOperator | LogisticsOperator | 1 shipment → 1 operator | Association |
+| ReturnRequest | order | Order | 1 request → 1 order | Association |
+| ReturnRequest | buyer | Buyer | 1 request → 1 buyer | Association |
+| ReturnRequest | approvedBy | Administrator | 1 request → 0..1 administrator | Association *(new — responsibility matrix)* |
 
-**Notas sobre el tipo de relación:**
-- **Herencia:** la subclase adquiere todos los atributos y métodos de la superclase (`Usuario`), y redefine el comportamiento marcado como abstracto/polimórfico. Se usa porque los 5 roles comparten identificación, nombre, correo y estado, pero cada uno tiene un comportamiento y unos datos propios distintos.
-- **Composición:** un `ItemPedido` no tiene sentido ni existe fuera de un `Pedido`. Si se elimina el pedido, sus items desaparecen con él. Es la única relación de este tipo en el modelo.
-- **Asociación:** el resto de relaciones son simples referencias entre entidades independientes — ambas pueden existir aunque la relación cambie (por ejemplo, una `Bodega` puede quedarse sin `Vendedor` propietario si es del Marketplace, pero la bodega no deja de existir).
+**Notes on relationship type:**
+- **Inheritance:** the subclass acquires all attributes and methods of the superclass (`User`), and redefines behavior marked as abstract/polymorphic. It is used because the 5 roles share identification, name, email, and status, but each has distinct behavior and its own data.
+- **Composition:** an `OrderItem` has no meaning and does not exist outside of an `Order`. If the order is deleted, its items disappear with it. It is the only relationship of this type in the model.
+- **Association:** the remaining relationships are simple references between independent entities — both can exist even if the relationship changes (for example, a `Warehouse` can be left without an owning `Seller` if it belongs to the Marketplace, but the warehouse continues to exist).
 
 ---
 
-# Enumeraciones
+# Enumerations
 
-| Enumeración | Valores | Usada en |
+| Enumeration | Values | Used in |
 |---|---|---|
-| `EstadoUsuario` | Activo, Bloqueado | Usuario |
-| `EstadoComprador` | Habilitado, Restringido | Comprador |
-| `TipoBodega` | Marketplace, Vendedor | Bodega |
-| `TipoProducto` | Físico, Digital | Producto |
-| `EstadoProducto` | Publicado, Suspendido, Descontinuado | Producto |
-| `TipoMovimiento` | Ingreso, Reserva, Salida por venta, Ajuste, Devolución | MovimientoInventario |
-| `EstadoPedido` | Carrito, Pendiente de Pago, Pagado, Despachado, Entregado/Finalizado | Pedido |
-| `EstadoEnvio` | Preparando, En Tránsito, Entregado, Incidencia | Envio |
-| `EstadoDevolucion` | Solicitada, Aprobada, Rechazada, Reembolsada | SolicitudDevolucion |
+| `UserStatus` | Active, Blocked | User |
+| `BuyerStatus` | Enabled, Restricted | Buyer |
+| `WarehouseType` | Marketplace, Seller | Warehouse |
+| `ProductType` | Physical, Digital | Product |
+| `ProductStatus` | Published, Suspended, Discontinued | Product |
+| `MovementType` | Inbound, Reservation, Sale Outbound, Adjustment, Return | InventoryMovement |
+| `OrderStatus` | Cart, Pending Payment, Paid, Shipped, Delivered/Completed | Order |
+| `ShipmentStatus` | Preparing, In Transit, Delivered, Issue | Shipment |
+| `ReturnStatus` | Requested, Approved, Rejected, Refunded | ReturnRequest |
 
 ---
 
-# Entidades
+# Entities
 
 ---
 
-# Usuario (Abstracto)
+# User (Abstract)
 
-## Descripción
+## Description
 
-Representa a cualquier participante autenticado del marketplace. Esta clase abstracta centraliza la información de identificación y de cuenta compartida por todos los roles.
+Represents any authenticated participant of the marketplace. This abstract class centralizes the identification and account information shared by all roles.
 
-Cada usuario tiene exactamente un único rol dentro del sistema (RG-02). En la especificación funcional, "Rol" aparece como atributo de Usuario; en este modelo **se sustituye deliberadamente por el tipo de la subclase** (`Comprador`, `Vendedor`, etc.), ya que la herencia garantiza el rol único de forma estructural en lugar de depender de un valor mutable que podría cambiarse por error.
+Each user has exactly one role within the system (BR-02). In the functional specification, "Role" appears as an attribute of User; in this model it **is deliberately replaced by the subclass type** (`Buyer`, `Seller`, etc.), since inheritance structurally guarantees a single role instead of relying on a mutable value that could be changed by mistake.
 
-Esta clase no puede ser instanciada directamente.
+This class cannot be instantiated directly.
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| identificacion | String | Identificador único del usuario. |
-| nombreCompleto | String | Nombre oficial completo del usuario. |
-| correoElectronico | String | Medio principal de acceso y comunicación. Único en toda la plataforma. |
-| estado | EstadoUsuario | Condición operativa actual (p. ej. Activo, Bloqueado). |
+| identification | String | Unique identifier of the user. |
+| fullName | String | Official full name of the user. |
+| email | String | Primary means of access and communication. Unique across the entire platform. |
+| status | UserStatus | Current operational condition (e.g. Active, Blocked). |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `estaActivo()` | Boolean | Verifica si `estado == Activo`. |
-| `obtenerPermisos()` *(abstracto)* | List\<Permiso\> | **Polimórfico.** Cada subclase define qué operaciones puede ejecutar (implementa RG-03: nadie administra información fuera de su rol). |
-| `validarAcceso(recurso)` *(abstracto)* | Boolean | **Polimórfico.** Cada subclase decide si puede operar sobre un recurso dado. |
+| `isActive()` | Boolean | Checks whether `status == Active`. |
+| `getPermissions()` *(abstract)* | List\<Permission\> | **Polymorphic.** Each subclass defines which operations it can perform (implements BR-03: no one manages information outside their role). |
+| `validateAccess(resource)` *(abstract)* | Boolean | **Polymorphic.** Each subclass decides whether it can operate on a given resource. |
 
 ---
 
-# Comprador
+# Buyer
 
-## Descripción
+## Description
 
-Representa a un usuario que adquiere productos publicados en el marketplace.
+Represents a user who purchases products published on the marketplace.
 
-Un comprador nunca podrá administrar información de otros compradores ni de inventarios (restricción clave del Dominio 2).
+A buyer can never manage information belonging to other buyers or inventory (key restriction of Domain 2).
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| direccionPrincipal | String | Ubicación habitual para entregas. |
-| direccionesAdicionales | List\<String\> | Ubicaciones secundarias de entrega. |
-| estadoComercial | EstadoComprador | Condición que determina si el comprador puede realizar compras. |
+| primaryAddress | String | Usual delivery location. |
+| additionalAddresses | List\<String\> | Secondary delivery locations. |
+| commercialStatus | BuyerStatus | Condition that determines whether the buyer can make purchases. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `obtenerPermisos()` | List\<Permiso\> | Redefine el método de `Usuario`: solo permisos sobre sus propios pedidos, carrito y devoluciones. |
-| `puedeComprar()` | Boolean | Verifica `estadoComercial == Habilitado`. |
-| `crearPedido()` | Pedido | Inicia un `Pedido` en estado `Carrito`. |
-| `solicitarDevolucion(pedido, motivo)` | SolicitudDevolucion | Crea una solicitud de devolución sobre un pedido entregado. |
+| `getPermissions()` | List\<Permission\> | Overrides the `User` method: permissions limited to their own orders, cart, and returns. |
+| `canPurchase()` | Boolean | Checks `commercialStatus == Enabled`. |
+| `createOrder()` | Order | Starts an `Order` in `Cart` status. |
+| `requestReturn(order, reason)` | ReturnRequest | Creates a return request for a delivered order. |
 
 ---
 
-# Vendedor
+# Seller
 
-## Descripción
+## Description
 
-Representa a un proveedor de productos en el marketplace.
+Represents a provider of products on the marketplace.
 
-Los vendedores no pueden auto-registrarse; son incorporados exclusivamente por un Administrador (regla de negocio del Dominio 3).
+Sellers cannot self-register; they are onboarded exclusively by an Administrator (business rule of Domain 3).
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| registradoPor | Administrador | Administrador que incorporó al vendedor a la plataforma. |
+| registeredBy | Administrator | Administrator who onboarded the seller onto the platform. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `obtenerPermisos()` | List\<Permiso\> | Redefine el método de `Usuario`: permisos sobre sus propios productos y bodegas. |
-| `publicarProducto(producto)` | void | Cambia `Producto.estado` a `Publicado`. |
-| `registrarIngresoInventario(item, cantidad)` | MovimientoInventario | Genera un movimiento de tipo `Ingreso`. |
+| `getPermissions()` | List\<Permission\> | Overrides the `User` method: permissions over their own products and warehouses. |
+| `publishProduct(product)` | void | Changes `Product.status` to `Published`. |
+| `registerInventoryInbound(item, quantity)` | InventoryMovement | Generates a movement of type `Inbound`. |
 
 ---
 
-# OperadorLogistico
+# LogisticsOperator
 
-## Descripción
+## Description
 
-Representa al usuario encargado de la operación física de bodegas y despachos.
+Represents the user responsible for the physical operation of warehouses and dispatches.
 
-## Atributos
+## Attributes
 
-*Sin atributos adicionales más allá de los heredados de `Usuario`.*
+*No additional attributes beyond those inherited from `User`.*
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `obtenerPermisos()` | List\<Permiso\> | Redefine el método de `Usuario`: permisos sobre envíos e inventario de despacho. |
-| `despacharPedido(envio)` | void | Marca `Envio.estadoEnvio` como `En Tránsito` y registra `fechaDespacho`. |
+| `getPermissions()` | List\<Permission\> | Overrides the `User` method: permissions over shipments and dispatch inventory. |
+| `dispatchOrder(shipment)` | void | Marks `Shipment.shipmentStatus` as `In Transit` and records `dispatchDate`. |
 
 ---
 
-# Administrador
+# Administrator
 
-## Descripción
+## Description
 
-Representa al usuario responsable de la administración de vendedores y bodegas.
+Represents the user responsible for managing sellers and warehouses.
 
-## Atributos
+## Attributes
 
-*Sin atributos adicionales más allá de los heredados de `Usuario`.*
+*No additional attributes beyond those inherited from `User`.*
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `obtenerPermisos()` | List\<Permiso\> | Redefine el método de `Usuario`: permisos administrativos globales (vendedores, bodegas, reembolsos). |
-| `registrarVendedor(datos)` | Vendedor | Crea un nuevo `Vendedor` con `registradoPor = this`. |
-| `aprobarDevolucion(solicitud)` | void | Cambia `SolicitudDevolucion.estadoSolicitud` a `Aprobada` y fija `aprobadoPor = this`. |
+| `getPermissions()` | List\<Permission\> | Overrides the `User` method: global administrative permissions (sellers, warehouses, refunds). |
+| `registerSeller(data)` | Seller | Creates a new `Seller` with `registeredBy = this`. |
+| `approveReturn(request)` | void | Changes `ReturnRequest.requestStatus` to `Approved` and sets `approvedBy = this`. |
 
 ---
 
 # Supervisor
 
-## Descripción
+## Description
 
-Representa un perfil de solo consulta utilizado para seguimiento operativo.
+Represents a read-only profile used for operational monitoring.
 
-## Atributos
+## Attributes
 
-*Sin atributos adicionales más allá de los heredados de `Usuario`.*
+*No additional attributes beyond those inherited from `User`.*
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `obtenerPermisos()` | List\<Permiso\> | Redefine el método de `Usuario`: solo lectura, sin permisos de modificación. |
-| `consultarReporte(tipo)` | Reporte | Genera información consolidada de solo consulta (OBJ-12). |
+| `getPermissions()` | List\<Permission\> | Overrides the `User` method: read-only, with no modification permissions. |
+| `queryReport(type)` | Report | Generates read-only consolidated information (OBJ-12). |
 
 ---
 
-# Bodega
+# Warehouse
 
-## Descripción
+## Description
 
-Representa un espacio físico donde se administra el inventario. Las bodegas se clasifican como pertenecientes al Marketplace o a un Vendedor específico.
+Represents a physical space where inventory is managed. Warehouses are classified as belonging to the Marketplace or to a specific Seller.
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| idBodega | String | Identificador único de la bodega. |
-| tipoBodega | TipoBodega | Clasificación de la bodega: Marketplace o Vendedor. |
-| propietario | Vendedor | Vendedor dueño de la bodega. Nulo cuando `tipoBodega` es Marketplace. |
+| warehouseId | String | Unique identifier of the warehouse. |
+| warehouseType | WarehouseType | Classification of the warehouse: Marketplace or Seller. |
+| owner | Seller | Seller who owns the warehouse. Null when `warehouseType` is Marketplace. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `esDeMarketplace()` | Boolean | Verifica `tipoBodega == Marketplace`. |
-| `obtenerInventario()` | List\<ItemInventario\> | Lista los ítems de inventario asociados a esta bodega. |
+| `isMarketplace()` | Boolean | Checks `warehouseType == Marketplace`. |
+| `getInventory()` | List\<InventoryItem\> | Lists the inventory items associated with this warehouse. |
 
 ---
 
-# Producto
+# Product
 
-## Descripción
+## Description
 
-Representa un bien ofrecido en el marketplace, ya sea físico o digital. Los productos físicos requieren inventario y despacho; los productos digitales se entregan de forma inmediata tras el pago.
+Represents a good offered on the marketplace, either physical or digital. Physical products require inventory and dispatch; digital products are delivered immediately after payment.
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| idProducto | String | Identificador único del producto. |
-| nombre | String | Nombre descriptivo del producto. |
-| tipoProducto | TipoProducto | Físico o Digital. |
-| variantes | List\<String\> | Variaciones como color, talla o modelo. |
-| estado | EstadoProducto | Publicado, Suspendido o Descontinuado. |
-| vendedor | Vendedor | Vendedor responsable del producto. |
+| productId | String | Unique identifier of the product. |
+| name | String | Descriptive name of the product. |
+| productType | ProductType | Physical or Digital. |
+| variants | List\<String\> | Variations such as color, size, or model. |
+| status | ProductStatus | Published, Suspended, or Discontinued. |
+| seller | Seller | Seller responsible for the product. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `esFisico()` | Boolean | Verifica `tipoProducto == Físico`. Determina si requiere `Envio`. |
-| `suspender()` | void | Cambia `estado` a `Suspendido`. |
-| `descontinuar()` | void | Cambia `estado` a `Descontinuado` (irreversible). |
+| `isPhysical()` | Boolean | Checks `productType == Physical`. Determines whether it requires a `Shipment`. |
+| `suspend()` | void | Changes `status` to `Suspended`. |
+| `discontinue()` | void | Changes `status` to `Discontinued` (irreversible). |
 
 ---
 
-# ItemInventario
+# InventoryItem
 
-## Descripción
+## Description
 
-Representa la existencia de un producto específico en una bodega específica. El inventario es distribuido y siempre debe estar vinculado a exactamente un producto y una bodega.
+Represents the stock of a specific product in a specific warehouse. Inventory is distributed and must always be linked to exactly one product and one warehouse.
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| producto | Producto | Producto al que se refiere esta existencia. |
-| bodega | Bodega | Bodega donde se encuentra la existencia. |
-| cantidad | Integer | Existencia disponible. Nunca debe ser negativa. |
+| product | Product | Product this stock refers to. |
+| warehouse | Warehouse | Warehouse where the stock is located. |
+| quantity | Integer | Available stock. Must never be negative. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `reservar(cantidad)` | MovimientoInventario | Valida que `cantidad <= this.cantidad` y que el ítem no esté dañado; genera un movimiento tipo `Reserva`. Lanza error si no hay existencia suficiente. |
-| `liberar(cantidad)` | MovimientoInventario | Genera un movimiento tipo `Ajuste` que incrementa la existencia (p. ej. al cancelar una reserva). |
-| `hayDisponibilidad(cantidad)` | Boolean | Verifica `cantidad <= this.cantidad`, sin generar movimiento. |
+| `reserve(quantity)` | InventoryMovement | Validates that `quantity <= this.quantity` and that the item is not damaged; generates a movement of type `Reservation`. Throws an error if there is not enough stock. |
+| `release(quantity)` | InventoryMovement | Generates a movement of type `Adjustment` that increases the stock (e.g. when canceling a reservation). |
+| `isAvailable(quantity)` | Boolean | Checks `quantity <= this.quantity`, without generating a movement. |
 
 ---
 
-# MovimientoInventario
+# InventoryMovement
 
-## Descripción
+## Description
 
-Representa un cambio aplicado a un `ItemInventario`. Todo ajuste de existencias debe poder rastrearse a un movimiento específico y a un usuario responsable (RG-01).
+Represents a change applied to an `InventoryItem`. Every stock adjustment must be traceable to a specific movement and a responsible user (BR-01).
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| idMovimiento | String | Identificador único del movimiento. |
-| itemInventario | ItemInventario | Ítem de inventario afectado por el movimiento. |
-| tipoMovimiento | TipoMovimiento | Ingreso, Reserva, Salida por venta, Ajuste o Devolución. |
-| cantidad | Integer | Cantidad involucrada en el movimiento. |
-| fechaMovimiento | LocalDateTime | Fecha y hora en que ocurrió el movimiento. |
-| ejecutadoPor | Usuario | Usuario autenticado que originó el movimiento *(nuevo — trazabilidad RG-01)*. |
+| movementId | String | Unique identifier of the movement. |
+| inventoryItem | InventoryItem | Inventory item affected by the movement. |
+| movementType | MovementType | Inbound, Reservation, Sale Outbound, Adjustment, or Return. |
+| quantity | Integer | Quantity involved in the movement. |
+| movementDate | LocalDateTime | Date and time the movement occurred. |
+| executedBy | User | Authenticated user who originated the movement *(new — BR-01 traceability)*. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `aplicar()` | void | Ejecuta el efecto del movimiento sobre `itemInventario.cantidad` según `tipoMovimiento`. |
+| `apply()` | void | Executes the effect of the movement on `inventoryItem.quantity` according to `movementType`. |
 
 ---
 
-# Pedido
+# Order
 
-## Descripción
+## Description
 
-Representa el compromiso comercial formal entre un comprador y el marketplace. Su ciclo de vida es el proceso central del sistema. Un pedido finalizado no podrá ser modificado bajo ninguna circunstancia.
+Represents the formal commercial commitment between a buyer and the marketplace. Its lifecycle is the central process of the system. A finalized order cannot be modified under any circumstances.
 
-Un `Pedido` recién creado se encuentra en estado `Carrito` y puede no tener items todavía (selección provisional).
+A newly created `Order` starts in `Cart` status and may not have any items yet (provisional selection).
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| idPedido | String | Identificador único del pedido. |
-| comprador | Comprador | Comprador que realizó el pedido. |
-| items | List\<ItemPedido\> | Productos y cantidades incluidos en el pedido (0..\*). |
-| estadoPedido | EstadoPedido | Carrito, Pendiente de Pago, Pagado, Despachado o Entregado/Finalizado. |
-| fechaCreacion | LocalDateTime | Fecha y hora en que se creó el pedido. |
+| orderId | String | Unique identifier of the order. |
+| buyer | Buyer | Buyer who placed the order. |
+| items | List\<OrderItem\> | Products and quantities included in the order (0..\*). |
+| orderStatus | OrderStatus | Cart, Pending Payment, Paid, Shipped, or Delivered/Completed. |
+| creationDate | LocalDateTime | Date and time the order was created. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `agregarItem(producto, cantidad)` | void | Válido solo si `estadoPedido == Carrito`. Crea/actualiza un `ItemPedido`. |
-| `quitarItem(itemPedido)` | void | Válido solo si `estadoPedido == Carrito`. |
-| `calcularTotal()` | BigDecimal | Suma `cantidad * precioUnitario` de todos los items. |
-| `confirmar()` | void | Transición `Carrito → Pendiente de Pago`. Requiere al menos 1 item. |
-| `finalizar()` | void | Transición a `Entregado/Finalizado`. A partir de aquí el pedido es inmutable. |
-| `estaFinalizado()` | Boolean | Verifica `estadoPedido == Entregado/Finalizado`. Usado como guarda antes de cualquier modificación. |
+| `addItem(product, quantity)` | void | Only valid if `orderStatus == Cart`. Creates/updates an `OrderItem`. |
+| `removeItem(orderItem)` | void | Only valid if `orderStatus == Cart`. |
+| `calculateTotal()` | BigDecimal | Sums `quantity * unitPrice` for all items. |
+| `confirm()` | void | Transition `Cart → Pending Payment`. Requires at least 1 item. |
+| `finalize()` | void | Transition to `Delivered/Completed`. From this point on the order is immutable. |
+| `isFinalized()` | Boolean | Checks `orderStatus == Delivered/Completed`. Used as a guard before any modification. |
 
 ---
 
-# ItemPedido
+# OrderItem
 
-## Descripción
+## Description
 
-Representa una línea de producto dentro de un pedido, capturando la cantidad y el precio en el momento de la compra.
+Represents a product line within an order, capturing the quantity and price at the time of purchase.
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| producto | Producto | Producto incluido en el pedido. |
-| cantidad | Integer | Cantidad del producto solicitada. |
-| precioUnitario | BigDecimal | Precio del producto en el momento del pedido. |
+| product | Product | Product included in the order. |
+| quantity | Integer | Quantity of the product requested. |
+| unitPrice | BigDecimal | Price of the product at the time of the order. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `subtotal()` | BigDecimal | Retorna `cantidad * precioUnitario`. |
+| `subtotal()` | BigDecimal | Returns `quantity * unitPrice`. |
 
 ---
 
-# Factura
+# Invoice
 
-## Descripción
+## Description
 
-Representa la información comercial asociada a una venta concluida.
+Represents the commercial information associated with a completed sale.
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| idFactura | String | Identificador único de la factura. |
-| pedido | Pedido | Pedido para el cual se generó esta factura. |
-| fechaEmision | LocalDateTime | Fecha y hora en que se emitió la factura. |
-| montoTotal | BigDecimal | Monto total facturado. |
+| invoiceId | String | Unique identifier of the invoice. |
+| order | Order | Order for which this invoice was generated. |
+| issueDate | LocalDateTime | Date and time the invoice was issued. |
+| totalAmount | BigDecimal | Total invoiced amount. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `generar(pedido)` | Factura | Crea la factura a partir de `pedido.calcularTotal()`. Válido solo si `pedido.estadoPedido == Pagado` o posterior. |
+| `generate(order)` | Invoice | Creates the invoice from `order.calculateTotal()`. Only valid if `order.orderStatus == Paid` or later. |
 
 ---
 
-# Envio
+# Shipment
 
-## Descripción
+## Description
 
-Representa el proceso logístico de un pedido físico, desde el despacho hasta la entrega.
+Represents the logistics process of a physical order, from dispatch to delivery.
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| idEnvio | String | Identificador único del envío. |
-| pedido | Pedido | Pedido que está siendo enviado. |
-| bodegaOrigen | Bodega | Bodega desde la cual se despacha el pedido. |
-| operadorLogistico | OperadorLogistico | Operador responsable del despacho. |
-| fechaDespacho | LocalDateTime | Fecha y hora en que el pedido salió de la bodega. |
-| estadoEnvio | EstadoEnvio | Estado actual del envío. |
+| shipmentId | String | Unique identifier of the shipment. |
+| order | Order | Order being shipped. |
+| originWarehouse | Warehouse | Warehouse from which the order is dispatched. |
+| logisticsOperator | LogisticsOperator | Operator responsible for the dispatch. |
+| dispatchDate | LocalDateTime | Date and time the order left the warehouse. |
+| shipmentStatus | ShipmentStatus | Current status of the shipment. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `marcarEnTransito()` | void | Cambia `estadoEnvio` y fija `fechaDespacho`. |
-| `marcarEntregado()` | void | Cambia `estadoEnvio` a `Entregado`; dispara `pedido.finalizar()`. |
+| `markInTransit()` | void | Changes `shipmentStatus` and sets `dispatchDate`. |
+| `markDelivered()` | void | Changes `shipmentStatus` to `Delivered`; triggers `order.finalize()`. |
 
 ---
 
-# SolicitudDevolucion
+# ReturnRequest
 
-## Descripción
+## Description
 
-Representa un proceso de devolución y/o reembolso iniciado por un comprador sobre un pedido entregado.
+Represents a return and/or refund process initiated by a buyer for a delivered order.
 
-## Atributos
+## Attributes
 
-| Atributo | Tipo | Descripción |
+| Attribute | Type | Description |
 |-----------|------|-------------|
-| idDevolucion | String | Identificador único de la solicitud de devolución. |
-| pedido | Pedido | Pedido que está siendo devuelto. |
-| comprador | Comprador | Comprador que solicitó la devolución. |
-| motivo | String | Motivo indicado para la devolución. |
-| estadoSolicitud | EstadoDevolucion | Estado actual del proceso de devolución/reembolso. |
-| montoReembolso | BigDecimal | Monto a reembolsar, una vez aprobado. |
-| aprobadoPor | Administrador | Administrador que aprobó/rechazó la solicitud *(nuevo — matriz de responsabilidades)*. |
+| returnId | String | Unique identifier of the return request. |
+| order | Order | Order being returned. |
+| buyer | Buyer | Buyer who requested the return. |
+| reason | String | Reason given for the return. |
+| requestStatus | ReturnStatus | Current status of the return/refund process. |
+| refundAmount | BigDecimal | Amount to be refunded, once approved. |
+| approvedBy | Administrator | Administrator who approved/rejected the request *(new — responsibility matrix)*. |
 
-## Métodos
+## Methods
 
-| Método | Retorno | Descripción |
+| Method | Return | Description |
 |---|---|---|
-| `aprobar(administrador)` | void | Fija `aprobadoPor`, cambia `estadoSolicitud` a `Aprobada`. |
-| `rechazar(administrador)` | void | Fija `aprobadoPor`, cambia `estadoSolicitud` a `Rechazada`. |
-| `procesarReembolso()` | MovimientoInventario | Válido solo si `estadoSolicitud == Aprobada`. Genera un movimiento tipo `Devolución` sobre el inventario correspondiente. |
+| `approve(administrator)` | void | Sets `approvedBy`, changes `requestStatus` to `Approved`. |
+| `reject(administrator)` | void | Sets `approvedBy`, changes `requestStatus` to `Rejected`. |
+| `processRefund()` | InventoryMovement | Only valid if `requestStatus == Approved`. Generates a movement of type `Return` on the corresponding inventory. |

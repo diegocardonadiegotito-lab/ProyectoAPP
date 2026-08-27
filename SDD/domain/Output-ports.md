@@ -1,43 +1,43 @@
 # Output Ports — NexusMarket
 
-## Introducción
+## Introduction
 
-Los *output ports* son las interfaces que el dominio define para comunicarse hacia afuera (persistencia, notificaciones, pasarelas externas) siguiendo el patrón de arquitectura hexagonal (Puertos y Adaptadores). El dominio **depende de estas interfaces, no de su implementación**: la capa de infraestructura (base de datos, mensajería, proveedores externos) implementa los adaptadores concretos en una etapa posterior a este documento, que es de negocio/dominio y no de tecnología (ver sección 3.2 de la especificación funcional: fuera de alcance la tecnología de implementación).
+*Output ports* are the interfaces the domain defines to communicate outward (persistence, notifications, external gateways) following the hexagonal architecture pattern (Ports and Adapters). The domain **depends on these interfaces, not on their implementation**: the infrastructure layer (database, messaging, external providers) implements the concrete adapters at a stage after this document, which is business/domain-focused and not technology-focused (see section 3.2 of the functional specification: implementation technology is out of scope).
 
-Cada puerto se agrupa por la entidad o agregado que gobierna, y expone únicamente las operaciones que los servicios de dominio (ver `Domain Services.md`) necesitan invocar.
+Each port is grouped by the entity or aggregate it governs, and exposes only the operations that the domain services (see `Domain Services.md`) need to invoke.
 
 ---
 
-## Puertos de persistencia (Repository Ports)
+## Persistence Ports (Repository Ports)
 
-| Puerto | Entidad / Agregado | Operaciones principales | Usado por (servicios) |
+| Port | Entity / Aggregate | Main operations | Used by (services) |
 |---|---|---|---|
-| `UsuarioRepositoryPort` | `Usuario` (y subclases) | `guardar(usuario)`, `buscarPorId(id)`, `buscarPorCorreo(correo)`, `existeCorreo(correo)` | user-authentication-services, buyer-services, seller-services |
-| `CompradorRepositoryPort` | `Comprador` | `guardar(comprador)`, `buscarPorId(id)` | buyer-services |
-| `VendedorRepositoryPort` | `Vendedor` | `guardar(vendedor)`, `buscarPorId(id)`, `listarPorAdministrador(adminId)` | seller-services |
-| `BodegaRepositoryPort` | `Bodega` | `guardar(bodega)`, `buscarPorId(id)`, `listarPorVendedor(vendedorId)` | warehouse-services |
-| `ProductoRepositoryPort` | `Producto` | `guardar(producto)`, `buscarPorId(id)`, `listarPublicados()`, `listarPorVendedor(vendedorId)` | catalog-services |
-| `ItemInventarioRepositoryPort` | `ItemInventario` | `guardar(item)`, `buscarPorProductoYBodega(idProducto, idBodega)`, `listarPorBodega(idBodega)` | inventory-services |
-| `MovimientoInventarioRepositoryPort` | `MovimientoInventario` | `guardar(movimiento)`, `listarPorItem(idItem)` | inventory-services |
-| `PedidoRepositoryPort` | `Pedido` (agregado raíz, incluye `ItemPedido`) | `guardar(pedido)`, `buscarPorId(id)`, `listarPorComprador(idComprador)` | order-services |
-| `FacturaRepositoryPort` | `Factura` | `guardar(factura)`, `buscarPorPedido(idPedido)` | billing-services |
-| `EnvioRepositoryPort` | `Envio` | `guardar(envio)`, `buscarPorPedido(idPedido)`, `listarPorOperador(idOperador)` | shipping-services |
-| `SolicitudDevolucionRepositoryPort` | `SolicitudDevolucion` | `guardar(solicitud)`, `buscarPorId(id)`, `listarPorComprador(idComprador)` | return-services |
+| `UserRepositoryPort` | `User` (and subclasses) | `save(user)`, `findById(id)`, `findByEmail(email)`, `emailExists(email)` | user-authentication-services, buyer-services, seller-services |
+| `BuyerRepositoryPort` | `Buyer` | `save(buyer)`, `findById(id)` | buyer-services |
+| `SellerRepositoryPort` | `Seller` | `save(seller)`, `findById(id)`, `listByAdministrator(adminId)` | seller-services |
+| `WarehouseRepositoryPort` | `Warehouse` | `save(warehouse)`, `findById(id)`, `listBySeller(sellerId)` | warehouse-services |
+| `ProductRepositoryPort` | `Product` | `save(product)`, `findById(id)`, `listPublished()`, `listBySeller(sellerId)` | catalog-services |
+| `InventoryItemRepositoryPort` | `InventoryItem` | `save(item)`, `findByProductAndWarehouse(productId, warehouseId)`, `listByWarehouse(warehouseId)` | inventory-services |
+| `InventoryMovementRepositoryPort` | `InventoryMovement` | `save(movement)`, `listByItem(itemId)` | inventory-services |
+| `OrderRepositoryPort` | `Order` (aggregate root, includes `OrderItem`) | `save(order)`, `findById(id)`, `listByBuyer(buyerId)` | order-services |
+| `InvoiceRepositoryPort` | `Invoice` | `save(invoice)`, `findByOrder(orderId)` | billing-services |
+| `ShipmentRepositoryPort` | `Shipment` | `save(shipment)`, `findByOrder(orderId)`, `listByOperator(operatorId)` | shipping-services |
+| `ReturnRequestRepositoryPort` | `ReturnRequest` | `save(request)`, `findById(id)`, `listByBuyer(buyerId)` | return-services |
 
 ---
 
-## Puertos de servicios externos / transversales
+## External / cross-cutting service ports
 
-| Puerto | Propósito | Usado por |
+| Port | Purpose | Used by |
 |---|---|---|
-| `ReporteQueryPort` | Consulta agregada de solo lectura para `Supervisor.consultarReporte()` (OBJ-12); no modifica estado, opera sobre vistas consolidadas de los repositorios anteriores. | reporting-services |
-| `NotificacionPort` | Envío de notificaciones al comprador/vendedor ante cambios de estado relevantes (pedido despachado, devolución aprobada). No forma parte del alcance funcional descrito en la especificación (sección 3.2 la excluye explícitamente); se declara aquí como punto de extensión. | order-services, shipping-services, return-services |
-| `PagoPort` | Validación/confirmación de pago para la transición `Pendiente de Pago → Pagado`. La especificación no detalla el mecanismo de pago; el puerto se limita a `confirmarPago(pedidoId, monto)`. | order-services |
+| `ReportQueryPort` | Read-only aggregated query for `Supervisor.queryReport()` (OBJ-12); does not modify state, operates on consolidated views of the repositories above. | reporting-services |
+| `NotificationPort` | Sends notifications to the buyer/seller upon relevant status changes (order shipped, return approved). Not part of the functional scope described in the specification (section 3.2 explicitly excludes it); declared here as an extension point. | order-services, shipping-services, return-services |
+| `PaymentPort` | Payment validation/confirmation for the `Pending Payment → Paid` transition. The specification does not detail the payment mechanism; the port is limited to `confirmPayment(orderId, amount)`. | order-services |
 
 ---
 
-## Reglas de diseño de los puertos
+## Port design rules
 
-- Ningún puerto expone tipos de infraestructura (SQL, DTOs de framework); solo entidades y Value Objects del dominio.
-- Toda operación que registre un cambio de estado relevante para auditoría (RG-01) recibe explícitamente el `Usuario` ejecutor, para que el adaptador pueda persistir la trazabilidad exigida por `MovimientoInventario.ejecutadoPor`.
-- Los puertos de solo consulta (`ReporteQueryPort`) están separados de los puertos de escritura para respetar la restricción del Supervisor: "solo lectura, sin permisos de modificación".
+- No port exposes infrastructure types (SQL, framework DTOs); only domain entities and Value Objects.
+- Every operation that records a state change relevant to auditing (BR-01) explicitly receives the executing `User`, so the adapter can persist the traceability required by `InventoryMovement.executedBy`.
+- Read-only ports (`ReportQueryPort`) are separated from write ports to respect the Supervisor's restriction: "read-only, no modification permissions."
