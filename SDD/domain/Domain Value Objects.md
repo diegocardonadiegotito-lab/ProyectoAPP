@@ -32,10 +32,6 @@ They are documented separately from the Domain Model because, unlike entities (`
 | `Money` | `amount: BigDecimal`, `currency` (implicit: the platform's single currency) | Wraps every monetary amount (`unitPrice`, `totalAmount`, `refundAmount`) to avoid direct arithmetic on `BigDecimal` without scale/rounding control. | `OrderItem`, `Invoice`, `ReturnRequest` |
 | `AuditPeriod` *(supports BR-01)* | `movementDate` + `executedBy` | Immutable pair attached to each `InventoryMovement` to guarantee traceability; cannot be modified once the movement is created. | `InventoryMovement` |
 
-> Note: `Address` and `Money` do not appear as separate classes in Domain Model v2 (the attributes are flat in `Buyer`, `OrderItem`, `Invoice`, and `ReturnRequest`). They are documented here as candidates for an explicit Value Object in the domain layer, given that both are identity-less data that always accompany an entity. If the team decides not to extract them as their own classes, this section serves as a reference for the invariants those attributes must satisfy regardless.
-
----
-
 ## Value Object invariants
 
 - Every Value Object is **immutable**: an update creates a new instance, the original object is never mutated.
