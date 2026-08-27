@@ -6,16 +6,12 @@ The Domain Model represents the core business entities of the NexusMarket market
 
 The model follows Object-Oriented Design principles and applies **inheritance** to eliminate duplicated information, and **polymorphism** so that each user role resolves its permissions and behavior differently.
 
-### Changes from v1
+# The model distinguishes between
 
-- **Methods** were added to all classes (v1 only had attributes — it was not possible to confirm polymorphism without behavior).
-- `Order.items` was corrected from `1..*` to `0..*` (a newly created cart has 0 items).
-- `InventoryMovement.executedBy: User` was added for traceability (BR-01).
-- `ReturnRequest.approvedBy: Administrator` (0..1) was added — the responsibility matrix assigns refunds to both Buyer and Administrator.
-- Explicitly documents why `User` does not have a `role` attribute (the specification lists it, but it is replaced by the subclass type).
-- The **Enumerations** section was added; these were previously referenced only as undefined types.
-
----
+People, representing identifiable individuals and their role within the system. All roles (Buyer, Seller, LogisticsOperator, Administrator, Supervisor) inherit from the abstract User, which centralizes identification, authentication, and status.
+Catalog & Inventory, representing what is offered on the marketplace and where it is physically stored. This includes Product, Warehouse, and InventoryItem.
+Order Lifecycle, representing the commercial commitment between a buyer and the marketplace, and the operations derived from it: Order, OrderItem, Invoice, Shipment, and ReturnRequest.
+Traceability Records, providing a historical record of changes applied to a domain entity. Currently this is limited to InventoryMovement, which tracks stock changes only.
 
 # Domain Class Hierarchy
 
