@@ -52,20 +52,13 @@ public abstract class Usuario {
         this.estado = estado;
     }
 
-    // ---- Abstraccion: metodo sin cuerpo que CADA subclase esta obligada a implementar ----
-    // Este es el metodo que habilita el polimorfismo: cuando se llama sobre una
-    // referencia de tipo Usuario, Java ejecuta en tiempo de ejecucion la version
-    // de la subclase real del objeto (Comprador, Vendedor, etc.), no una version generica.
     public abstract String describirRol();
 
-    // toString() de la clase padre reutiliza el metodo abstracto: por eso
-    // imprimir cualquier Usuario (sin importar el tipo real) ya muestra el rol correcto.
     @Override
     public String toString() {
         return describirRol() + " | " + nombreCompleto + " | " + correoElectronico + " | " + estado;
     }
 
-    // Dos usuarios se consideran el mismo si comparten identificacion (regla de unicidad del dominio).
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

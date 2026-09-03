@@ -42,9 +42,6 @@ public class ItemInventario {
     public String toString() {
         return "ItemInventario [" + producto + " en " + bodega + " = " + cantidad + "]";
     }
-
-    // La identidad de un ItemInventario es la combinacion producto + bodega (regla del dominio:
-    // "siempre debe estar vinculado a exactamente un producto y una bodega").
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
