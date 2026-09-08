@@ -1,4 +1,4 @@
-# Billing Services (Invoice)
+# BillingService
 
 ## 1. Responsibility
 
@@ -14,9 +14,9 @@ Generates and retrieves the commercial information associated with a completed s
 ## 3. Applied business rules
 
 - OBJ-09: administration of billing for purchases.
-- `Invoice.generate()` uses `order.calculateTotal()` as the single source of truth for the amount — the service does not independently recalculate the total.
+- `Invoice.generate()` uses `order.calculateTotal()` as the single source of truth for the amount.
 
 ## 4. Dependencies (Output Ports)
 
 - `InvoiceRepositoryPort`: `save`, `findByOrder`.
-- `OrderRepositoryPort`: `findById` (reads status and total).
+- `OrderRepositoryPort`: `findById`.
