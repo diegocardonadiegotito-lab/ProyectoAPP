@@ -4,8 +4,6 @@
 
 A Domain Service encapsulates business logic that **does not naturally belong to a single entity**, because it coordinates several entities/aggregates, validates cross-cutting rules (BR-01, BR-02, BR-03), or depends on an output port to complete. When an operation can be resolved entirely within an entity (for example `Product.suspend()`), it is left as an entity method and is not duplicated here as a service.
 
-This version decomposes the original 11 services into **30 services**, applying two criteria consistently:
-
 1. **Command/Query separation:** a service that writes (creates or changes state) is separated from one that only reads (queries).
 2. **One service per entity/responsibility, not per role that calls it:** where a single file previously mixed operations over several entities (e.g. `Seller`, `Warehouse`, `Product`, `InventoryMovement` all in one file), each entity now has its own service.
 
@@ -15,7 +13,7 @@ This document is the general index; the detail of each service lives in its own 
 
 ---
 
-## Domain Services Map (30 services)
+## Domain Services Map
 
 ### Users & Authentication (DOMAIN 1)
 
